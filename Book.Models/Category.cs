@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace BookApp.Models
+namespace Book.Models
 {
     public class Category
     {
@@ -10,7 +10,7 @@ namespace BookApp.Models
 
         [Required]
         [MaxLength(30)]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [Required]
         [DisplayName("Category Number")]

@@ -1,10 +1,11 @@
-using BookApp.Models;
+using Book.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace BookApp.Controllers
+namespace BookApp.Areas.Costumer.Controllers
 {
-    public class HomeController : Controller
+	[Area("Costumer")]
+	public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
 
