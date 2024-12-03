@@ -2,42 +2,48 @@
 using Book.DataAccess.Repository.IRepository;
 using Book.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Collections.Generic;
 
 namespace BookApp.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    public class CategoryController : Controller
+    public class ProductController : Controller
     {
         private readonly IUnitOfWork _UnitOfWork;
-        public CategoryController(IUnitOfWork unitOfWork)
+        public ProductController(IUnitOfWork unitOfWork)
         {
             _UnitOfWork = unitOfWork;
         }
         public IActionResult Index()
         {
-            List<Category> objCategoryList = _UnitOfWork.Category.GetAll().ToList();
-            return View(objCategoryList);
+            List<Product> objProductList = _UnitOfWork.Product.GetAll().ToList();
+
+            return View(objProductList);
         }
         public IActionResult Create()
         {
-            return View();
+            IEnumerable<SelectListItem> CategoryList = _UnitOfWork.Category
+                .GetAll().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                Value = u.Id.ToString()
+                });
+
+            //ViewBag.CategoryList = CategoryList;
+			ViewData["CategoryList"] = CategoryList;
+
+			return View();
         }
         [HttpPost]
-        public IActionResult Create(Category obj)
+        public IActionResult Create(Product obj)
         {
-            //if(obj.Name == obj.DisplayOrder.ToString())
-            //{
-            //  ModelState.AddModelError("", "The Display order cant match the name");
-            //}
-            //if (obj.Name != null && (obj.Name == "test" || obj.Name == "Teste"))
-            //{
-            //	ModelState.AddModelError("","test is an Invalid Name");
-            //}
             if (ModelState.IsValid)
             {
-                _UnitOfWork.Category.Add(obj);
+                _UnitOfWork.Product.Add(obj);
                 _UnitOfWork.Save();
-                TempData["success"] = "Category created sucessfully";
+                TempData["success"] = "Product created sucessfully";
                 return RedirectToAction("Index");
             }
             return View();
@@ -49,24 +55,24 @@ namespace BookApp.Areas.Admin.Controllers
                 return NotFound();
             }
             // 3 Formas de Tirar um valor da Base de Dados
-            Category? categoryFromDb = _UnitOfWork.Category.Get(u => u.Id == id);
+            Product? ProductFromDb = _UnitOfWork.Product.Get(u => u.Id == id);
             //Category? categoryFromDb = _db.Categories.FirstOrDefault(u=>u.Id==id);
             //Category? categoryFromDb = _db.Categories.Where(u => u.Id == id).FirstOrDefault();
-            if (categoryFromDb == null)
+            if (ProductFromDb == null)
             {
                 return NotFound();
             }
-            return View(categoryFromDb);
+            return View(ProductFromDb);
         }
 
         [HttpPost]
-        public IActionResult Edit(Category obj)
+        public IActionResult Edit(Product obj)
         {
             if (ModelState.IsValid)
             {
-                _UnitOfWork.Category.Update(obj);
+                _UnitOfWork.Product.Update(obj);
                 _UnitOfWork.Save();
-                TempData["success"] = "Category updated sucessfully";
+                TempData["success"] = "Product updated sucessfully";
                 return RedirectToAction("Index");
             }
             return View();
@@ -78,25 +84,25 @@ namespace BookApp.Areas.Admin.Controllers
                 return NotFound();
             }
             // 3 Formas de Tirar um valor da Base de Dados
-            Category? categoryFromDb = _UnitOfWork.Category.Get(u => u.Id == id);
+            Product? productFromDb = _UnitOfWork.Product.Get(u => u.Id == id);
             //Category? categoryFromDb = _db.Categories.FirstOrDefault(u=>u.Id==id);
             //Category? categoryFromDb = _db.Categories.Where(u => u.Id == id).FirstOrDefault();
-            if (categoryFromDb == null)
+            if (productFromDb == null)
             {
                 return NotFound();
             }
-            return View(categoryFromDb);
+            return View(productFromDb);
         }
 
         [HttpPost, ActionName("Delete")]
         public IActionResult DeletePost(int? id)
         {
-            Category? obj = _UnitOfWork.Category.Get(u => u.Id == id);
+            Product? obj = _UnitOfWork.Product.Get(u => u.Id == id);
             if (obj == null)
             {
                 return NotFound();
             }
-            _UnitOfWork.Category.Remove(obj);
+            _UnitOfWork.Product.Remove(obj);
             _UnitOfWork.Save();
             return RedirectToAction("Index");
         }
