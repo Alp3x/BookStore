@@ -13,11 +13,13 @@ namespace BookApp.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _UnitOfWork;
-        public ProductController(IUnitOfWork unitOfWork)
-        {
-            _UnitOfWork = unitOfWork;
-        }
-        public IActionResult Index()
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
+		{
+			_UnitOfWork = unitOfWork;
+			_webHostEnvironment = webHostEnvironment;
+		}
+		public IActionResult Index()
         {
             List<Product> objProductList = _UnitOfWork.Product.GetAll().ToList();
 
@@ -60,7 +62,37 @@ namespace BookApp.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                _UnitOfWork.Product.Add(productVm.Product);
+                string wwwRootPath = _webHostEnvironment.WebRootPath;
+                if(file != null)
+                {
+                    string fileName =Guid.NewGuid().ToString()+Path.GetExtension(file.FileName);
+                    string productPath = Path.Combine(wwwRootPath, @"images\product");
+
+                    if (!String.IsNullOrEmpty(productVm.Product.ImageUrl)) 
+                    {
+                        var oldImagePath = Path.Combine(wwwRootPath, productVm.Product.ImageUrl.TrimStart('\\');
+
+                        if(System.IO.File.Exists(oldImagePath)){
+                        System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
+                    using (var fileStream = new FileStream(Path.Combine(productPath, fileName),FileMode.Create))
+                    {
+                        file.CopyTo(fileStream);
+                    }
+
+                    productVm.Product.ImageUrl = @"\images\product\" + fileName;
+                }
+
+                if (productVm.Product.Id == 0) 
+                {
+					_UnitOfWork.Product.Add(productVm.Product);
+				}
+                else
+                {
+                    _UnitOfWork.Product.Update(productVm.Product);
+                }
                 _UnitOfWork.Save();
                 TempData["success"] = "Product created sucessfully";
                 return RedirectToAction("Index");
