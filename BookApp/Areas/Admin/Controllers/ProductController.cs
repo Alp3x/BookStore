@@ -1,6 +1,7 @@
 ﻿using Book.DataAccess.Data;
 using Book.DataAccess.Repository.IRepository;
 using Book.Models;
+using Book.Models.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -22,7 +23,7 @@ namespace BookApp.Areas.Admin.Controllers
 
             return View(objProductList);
         }
-        public IActionResult Create()
+        public IActionResult UpSert(int? id)
         {
             IEnumerable<SelectListItem> CategoryList = _UnitOfWork.Category
                 .GetAll().Select(u => new SelectListItem
@@ -32,51 +33,52 @@ namespace BookApp.Areas.Admin.Controllers
                 });
 
             //ViewBag.CategoryList = CategoryList;
-			ViewData["CategoryList"] = CategoryList;
+			//ViewData["CategoryList"] = CategoryList;
+            ProductVM productVM = new()
+            {
 
-			return View();
+                CategoryList = CategoryList,
+                Product = new Product()
+            };
+
+            if(id == null || id == 0 )
+            {
+                // Create
+				return View(productVM);
+			}
+            else
+            {
+                //Update
+                productVM.Product = _UnitOfWork.Product.Get(u => u.Id == id);
+                return View(productVM);
+            }
+
+
         }
         [HttpPost]
-        public IActionResult Create(Product obj)
+        public IActionResult Upsert(ProductVM productVm, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                _UnitOfWork.Product.Add(obj);
+                _UnitOfWork.Product.Add(productVm.Product);
                 _UnitOfWork.Save();
                 TempData["success"] = "Product created sucessfully";
                 return RedirectToAction("Index");
             }
-            return View();
-        }
-        public IActionResult Edit(int id)
-        {
-            if (id == 0)
+            else 
             {
-                return NotFound();
-            }
-            // 3 Formas de Tirar um valor da Base de Dados
-            Product? ProductFromDb = _UnitOfWork.Product.Get(u => u.Id == id);
-            //Category? categoryFromDb = _db.Categories.FirstOrDefault(u=>u.Id==id);
-            //Category? categoryFromDb = _db.Categories.Where(u => u.Id == id).FirstOrDefault();
-            if (ProductFromDb == null)
-            {
-                return NotFound();
-            }
-            return View(ProductFromDb);
+				//ViewBag.CategoryList = CategoryList;
+				//ViewData["CategoryList"] = CategoryList;
+				productVm.CategoryList = _UnitOfWork.Category.GetAll().Select(u => new SelectListItem
+					{
+						Text = u.Name,
+						Value = u.Id.ToString()
+					});
+				return View(productVm);
+			}
+            
         }
 
-        [HttpPost]
-        public IActionResult Edit(Product obj)
-        {
-            if (ModelState.IsValid)
-            {
-                _UnitOfWork.Product.Update(obj);
-                _UnitOfWork.Save();
-                TempData["success"] = "Product updated sucessfully";
-                return RedirectToAction("Index");
-            }
-            return View();
-        }
         public IActionResult Delete(int id)
         {
             if (id == 0)
